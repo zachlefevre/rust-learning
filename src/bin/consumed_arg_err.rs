@@ -10,11 +10,11 @@ fn dothing(s: String) -> Result<(), dothingErrors> {
 fn retry<T, E, R>(t: T, f: fn(T) -> Result<R, E>, extractor: fn(E) -> T, times: i32) -> Result<R, E> {
     match  f(t) {
         Err(e) =>
-        if times >= 0 {
-            retry(extractor(e), f, extractor, times - 1)
-        } else {
-            Err(e)
-        },
+            if times >= 0 {
+                retry(extractor(e), f, extractor, times - 1)
+            } else {
+                Err(e)
+            },
         Ok(v) => Ok(v)
     }
 
