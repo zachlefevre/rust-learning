@@ -7,8 +7,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let connect = TcpStream::connect("127.0.0.1:8888").await?;
     let (mut read, mut write) = io::split(connect);
     tokio::spawn(async move {
-        write.write(b"hey there").await;
-        write.write(b"person").await;
+        write.write(b"hey there").await.unwrap();
+        write.write(b"person").await.unwrap();
     });
 
     let mut buf: [u8; 5] = Default::default();
