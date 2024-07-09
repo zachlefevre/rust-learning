@@ -76,6 +76,10 @@ struct Timeout<T> {
     timeout: Duration
 }
 
+impl<T> Timeout<T> {
+    fn new(inner_handler: T, timeout: Duration) -> Self { Self { inner_handler, timeout } }
+}
+
 impl<T: Handler + Clone + 'static> Handler for Timeout<T> {
 
     // references must be pinned to implement Future
@@ -107,7 +111,5 @@ async fn main() -> Result<(), Box<dyn Error>> {
         addr: "127.0.0.1:8888".into()
     };
 
-    server.run(Timeout { inner_handler: HttpHandler,
-                         timeout: Duration::from_secs(18)
-    }).await
+    server.run(Timeout::new(HttpHandler, Duration::from_secs(18))).await
 }
