@@ -24,8 +24,8 @@ fn write_error(_error: Box<dyn Error>, _write: impl AsyncWrite) {
 }
 
 
-
-trait Handler<Request> {
+// Service is actually useful for the client too, and therefore Handler is not an appropriate name
+trait Service<Request> {
     type Response;
 
     // we let the user choose their output type, although it *must* be a Future of this particuar shape
@@ -36,7 +36,7 @@ trait Handler<Request> {
 
 impl Server {
     async fn run<F>(self, mut handler: F) -> Result<(), Box<dyn Error>> where
-        F: Handler<HttpRequest, Response = HttpResponse>
+        F: Service<HttpRequest, Response = HttpResponse>
     {
         let listener = TcpListener::bind(self.addr).await?;
 
@@ -56,7 +56,7 @@ impl Server {
 
 #[derive(Clone)]
 struct HttpHandler;
-impl Handler<HttpRequest> for HttpHandler {
+impl Service<HttpRequest> for HttpHandler {
     type Response = HttpResponse;
 
     type Future = Pin<Box<dyn Future<Output = Result<HttpResponse, Box<dyn Error>>>>>;
@@ -84,7 +84,7 @@ impl<T> Timeout<T> {
     fn new(inner_handler: T, timeout: Duration) -> Self { Self { inner_handler, timeout } }
 }
 
-impl<Request: 'static, T: Handler<Request> + Clone + 'static> Handler<Request> for Timeout<T> {
+impl<Request: 'static, T: Service<Request> + Clone + 'static> Service<Request> for Timeout<T> {
     type Response = T::Response;
 
     // references must be pinned to implement Future
