@@ -1,4 +1,4 @@
-use std::{error::Error, future::Future, pin::Pin};
+use std::{error::Error, future::Future, pin::Pin, time::Duration};
 
 use tokio::{net::TcpListener, io::{self, AsyncRead, AsyncWrite}};
 
@@ -52,6 +52,7 @@ impl Server {
 }
 
 
+#[derive(Clone)]
 struct HttpHandler;
 impl Handler for HttpHandler {
     type Future = Pin<Box<dyn Future<Output = Result<HttpResponse, Box<dyn Error>>>>>;
@@ -69,7 +70,31 @@ impl Handler for HttpHandler {
     }
 }
 
+#[derive(Clone)]
+struct Timeout<T> {
+    inner_handler: T,
+    timeout: Duration
+}
 
+impl<T: Handler + Clone + 'static> Handler for Timeout<T> {
+    type Future = Pin<Box<dyn Future<Output = Result<HttpResponse, Box<dyn Error>>>>>;
+
+    fn call(&mut self, req: HttpRequest) -> Self::Future {
+        let mut this = self.clone();
+
+        Box::pin(async move {
+            let fut = this.inner_handler.call(req);
+
+            let result = tokio::time::timeout(this.timeout, fut).await;
+
+            match result {
+                Err(_elapsed_time) => todo!(),
+                Ok(Ok(response)) => Ok(response),
+                Ok(Err(err)) => Err(err)
+            }
+        })
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -77,5 +102,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         addr: "127.0.0.1:8888".into()
     };
 
-    server.run(HttpHandler).await
+    server.run(Timeout { inner_handler: HttpHandler,
+                         timeout: Duration::from_secs(18)
+    }).await
 }
