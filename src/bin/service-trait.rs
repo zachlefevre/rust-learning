@@ -1,6 +1,6 @@
-use std::{error::Error};
+use std::error::Error;
 
-use tokio::net::{TcpListener, TcpStream};
+use tokio::{net::TcpListener, io::{self, AsyncRead, AsyncWrite}};
 
 struct HttpRequest;
 struct HttpResponse;
@@ -9,19 +9,26 @@ struct Server {
     addr: String
 }
 
-fn make_request(socket: &mut TcpStream) -> HttpRequest {
+fn make_request(_read: impl AsyncRead) -> HttpRequest {
     HttpRequest
+}
+
+fn write_response(_http_response: HttpResponse, _write: impl AsyncWrite) {
+    ()
 }
 
 impl Server {
     async fn run<F>(self, handler: F) -> Result<(), Box<dyn Error>> where
-        F: Fn(HttpRequest) -> HttpResponse {
+        F: Fn(HttpRequest) -> HttpResponse,
+    {
         let listener = TcpListener::bind(self.addr).await?;
-        
+
         loop {
-            let (mut socket, _) = listener.accept().await?;
-            let request = make_request(&mut socket);
+            let (socket, _) = listener.accept().await?;
+            let (read, write) = io::split(socket);
+            let request = make_request(read);
             let response = handler(request);
+            write_response(response, write);
         }
     }
 }
@@ -33,5 +40,5 @@ async fn main() -> Result<(), Box<dyn Error>> {
         addr: "127.0.0.1:8888".into()
     };
 
-    server.run(|req| HttpResponse).await
+    server.run(|_req|  HttpResponse).await
 }
