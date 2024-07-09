@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, future::Future};
 
 use tokio::{net::TcpListener, io::{self, AsyncRead, AsyncWrite}};
 
@@ -18,8 +18,9 @@ fn write_response(_http_response: HttpResponse, _write: impl AsyncWrite) {
 }
 
 impl Server {
-    async fn run<F>(self, handler: F) -> Result<(), Box<dyn Error>> where
-        F: Fn(HttpRequest) -> HttpResponse,
+    async fn run<F, Fut>(self, handler: F) -> Result<(), Box<dyn Error>> where
+        F: Fn(HttpRequest) -> Fut,
+        Fut: Future<Output = HttpResponse>
     {
         let listener = TcpListener::bind(self.addr).await?;
 
@@ -27,7 +28,7 @@ impl Server {
             let (socket, _) = listener.accept().await?;
             let (read, write) = io::split(socket);
             let request = make_request(read);
-            let response = handler(request);
+            let response = handler(request).await;
             write_response(response, write);
         }
     }
@@ -40,5 +41,5 @@ async fn main() -> Result<(), Box<dyn Error>> {
         addr: "127.0.0.1:8888".into()
     };
 
-    server.run(|_req|  HttpResponse).await
+    server.run(|_req|  async {HttpResponse}).await
 }
