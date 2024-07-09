@@ -25,6 +25,10 @@ fn write_error(_error: Box<dyn Error>, _write: impl AsyncWrite) {
 
 
 
+trait Handler {
+    async fn call(&mut self, req: HttpRequest) -> HttpResponse;
+}
+
 impl Server {
     async fn run<F, Fut>(self, handler: F) -> Result<(), Box<dyn Error>> where
         F: Fn(HttpRequest) -> Fut,
