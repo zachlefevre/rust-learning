@@ -77,9 +77,14 @@ struct Timeout<T> {
 }
 
 impl<T: Handler + Clone + 'static> Handler for Timeout<T> {
+
+    // references must be pinned to implement Future
+    // Must be boxed to have a particular size and allow `dyn ...`
     type Future = Pin<Box<dyn Future<Output = Result<HttpResponse, Box<dyn Error>>>>>;
 
     fn call(&mut self, req: HttpRequest) -> Self::Future {
+
+        // we do not want to bind the lifetime of the handler with the lifetime of our &mut self, and so we need to clone (this lets us move this cloned handler around)
         let mut this = self.clone();
 
         Box::pin(async move {
