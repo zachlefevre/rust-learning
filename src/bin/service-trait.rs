@@ -2,7 +2,9 @@ use std::{error::Error, future::Future};
 
 use tokio::{net::TcpListener, io::{self, AsyncRead, AsyncWrite}};
 
-struct HttpRequest;
+struct HttpRequest {
+    path: String
+}
 struct HttpResponse;
 
 struct Server {
@@ -10,7 +12,7 @@ struct Server {
 }
 
 fn make_request(_read: impl AsyncRead) -> HttpRequest {
-    HttpRequest
+    todo!()
 }
 
 fn write_response(_http_response: HttpResponse, _write: impl AsyncWrite) {
@@ -41,5 +43,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         addr: "127.0.0.1:8888".into()
     };
 
-    server.run(|_req|  async {HttpResponse}).await
+    async fn handler(req: HttpRequest) -> HttpResponse {
+        if req.path == "/" {
+            HttpResponse
+        } else {
+            HttpResponse
+        }
+    }
+
+    server.run(handler).await
 }
