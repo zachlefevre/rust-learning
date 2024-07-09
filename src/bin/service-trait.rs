@@ -25,16 +25,18 @@ fn write_error(_error: Box<dyn Error>, _write: impl AsyncWrite) {
 
 
 
-trait Handler {
-    // we let the user choose their output type, although it *must* be a Future of this particuar shape
-    type Future: Future<Output = Result<HttpResponse, Box<dyn Error>>>;
+trait Handler<Request> {
+    type Response;
 
-    fn call(&mut self, req: HttpRequest) -> Self::Future;
+    // we let the user choose their output type, although it *must* be a Future of this particuar shape
+    type Future: Future<Output = Result<Self::Response, Box<dyn Error>>>;
+
+    fn call(&mut self, req: Request) -> Self::Future;
 }
 
 impl Server {
     async fn run<F>(self, mut handler: F) -> Result<(), Box<dyn Error>> where
-        F: Handler
+        F: Handler<HttpRequest, Response = HttpResponse>
     {
         let listener = TcpListener::bind(self.addr).await?;
 
@@ -54,7 +56,9 @@ impl Server {
 
 #[derive(Clone)]
 struct HttpHandler;
-impl Handler for HttpHandler {
+impl Handler<HttpRequest> for HttpHandler {
+    type Response = HttpResponse;
+
     type Future = Pin<Box<dyn Future<Output = Result<HttpResponse, Box<dyn Error>>>>>;
 
     fn call(&mut self, req: HttpRequest) -> Self::Future {
@@ -80,13 +84,14 @@ impl<T> Timeout<T> {
     fn new(inner_handler: T, timeout: Duration) -> Self { Self { inner_handler, timeout } }
 }
 
-impl<T: Handler + Clone + 'static> Handler for Timeout<T> {
+impl<Request: 'static, T: Handler<Request> + Clone + 'static> Handler<Request> for Timeout<T> {
+    type Response = T::Response;
 
     // references must be pinned to implement Future
     // Must be boxed to have a particular size and allow `dyn ...`
-    type Future = Pin<Box<dyn Future<Output = Result<HttpResponse, Box<dyn Error>>>>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Box<dyn Error>>>>>;
 
-    fn call(&mut self, req: HttpRequest) -> Self::Future {
+    fn call(&mut self, req: Request) -> Self::Future {
 
         // we do not want to bind the lifetime of the handler with the lifetime of our &mut self, and so we need to clone (this lets us move this cloned handler around)
         let mut this = self.clone();
