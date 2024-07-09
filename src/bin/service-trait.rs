@@ -23,11 +23,15 @@ impl Server {
             let request = make_request(&mut socket);
             let response = handler(request);
         }
-        Ok(())
     }
 }
 
 
-fn main() {
-    
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    let server = Server {
+        addr: "127.0.0.1:8888".into()
+    };
+
+    server.run(|req| HttpResponse).await
 }
