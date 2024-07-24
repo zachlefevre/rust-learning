@@ -1,26 +1,27 @@
-use std::{time, future::Future, task::Poll};
+use std::{time::{Instant, Duration}, future::Future, task::Poll};
 
 struct Delay {
-    time: time::Instant
+    instant: Instant
 }
 
 impl Future for Delay {
-    type Output = time::Instant;
+    type Output = ();
 
     fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        let now = time::Instant::now();
-        if now >= self.time {
-            Poll::Ready(now)
+        if self.instant <= Instant::now() {
+            Poll::Ready(())
         } else {
-            println!("{:?}", now);
+            println!("not done yet");
             cx.waker().wake_by_ref();
             Poll::Pending
         }
     }
 }
 
+
 #[tokio::main]
 async fn main() {
-    let delay = Delay { time: time::Instant::now() + time::Duration::from_secs(5) };
-    dbg!(delay.await);
+    let delay = Delay {instant: Instant::now() + Duration::from_secs(5)};
+    delay.await;
+    println!("done")
 }
