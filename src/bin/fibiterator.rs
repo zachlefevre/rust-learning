@@ -1,18 +1,26 @@
-impl Solution {
-    pub fn fib(n: i32) -> i32 {
-        let mut curr = 0;
-        let mut next = 1;
-        for _ in 0..n {
-            let prev = next;
-            next = next + curr;
-            curr = prev;
-        };
-        curr
+struct Fib {
+    prev: i32,
+    next: i32
+}
+
+impl Iterator for Fib {
+    type Item = i32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let temp = self.next;
+        self.next = self.prev + self.next;
+        self.prev = temp;
+        Some(self.prev)
     }
 }
 
-struct Solution;
 
 fn main() {
-    dbg!(Solution::fib(5));
+    let f = Fib {
+        prev: 0, next: 1
+    };
+
+    for (index, fib) in f.enumerate() {
+        println!("{index}: {fib}")
+    };
 }
