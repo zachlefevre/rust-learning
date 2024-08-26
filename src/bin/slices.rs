@@ -31,6 +31,9 @@ fn main() {
     dbg!(text.chars()
         .filter(|ch| ! ch.is_whitespace()).collect::<String>());
 
-    let b: i32 = *array.get(2).unwrap_or(&8);
+    let strings = ["hey", "there", "person"].map(|item| String::from(item));
+    let binding = String::from("foobar");
+    let a = strings.get(2).unwrap_or(&binding);
+    dbg!(a);
 
 }
