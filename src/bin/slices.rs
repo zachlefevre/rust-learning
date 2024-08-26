@@ -16,6 +16,11 @@ fn main() {
     take_slice(&array);
     take_slice(&array[..]);
 
+    let vector = vec![1, 2, 3];
+    take_slice(&vector);
+    take_slice(&vector[..]);
+    take_slice(&vector[1..]);
+
     let s = "hey there";
 
     let text = String::from(s);
@@ -35,5 +40,4 @@ fn main() {
     let binding = String::from("foobar");
     let a = strings.get(2).unwrap_or(&binding);
     dbg!(a);
-
 }
