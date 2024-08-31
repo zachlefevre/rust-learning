@@ -14,7 +14,7 @@ fn main() {
     let s2 = s.to_owned();
     dbg!(s);
 
-    dbg!("hey this is a sentence".to_string().chars().filter(|s| !s.is_whitespace()).collect::<String>());
+    dbg!("hey this is a sentence".chars().filter(|s| !s.is_whitespace()).collect::<String>());
 
     dbg!(foo());
     dbg!(bar());
