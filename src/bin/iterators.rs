@@ -21,4 +21,12 @@ fn main() {
         dbg!(k, v);
     }
     dbg!(t(Foo));
+
+
+    dbg!(vec![1, 2, 3].iter().filter(|t| **t == 2).collect::<Vec<_>>());
+    dbg!(vec![1, 2, 3].iter().map(|t| *t == 2).collect::<Vec<_>>());
+
+
+    dbg!(vec![1, 2, 3].into_iter().filter(|t| *t == 2).collect::<Vec<_>>());
+    dbg!(vec![1, 2, 3].into_iter().map(|t| t == 2).collect::<Vec<_>>());
 }
