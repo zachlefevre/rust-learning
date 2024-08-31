@@ -17,4 +17,14 @@ fn main() {
     dbg!(Person2 {
         name: "hey there"
     });
+
+
+    let t = ("hey there".to_string(), "hey there".to_string());
+    let (ref a, ref b) = t;
+
+    dbg!(t);
+
+    let v = "hey there person".split(" ").map(String::from).collect::<Vec<_>>();
+    dbg!(&v[0]);
+
 }
