@@ -45,4 +45,22 @@ fn main() {
 
     dbg!(op);
 
+
+    let slice = ["hey", "there"].map(String::from);
+
+    let binding = "foo".to_string();
+    let thing = slice.get(0).unwrap_or(&binding);
+    thing;
+
+}
+
+
+fn some_func(i: &Option<String>) -> Option<()> {
+    match *i {
+        None => None,
+        Some(ref v) => {
+            let n = v;
+            Some(())
+        }
+    }
 }
