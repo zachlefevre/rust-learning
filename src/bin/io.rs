@@ -7,6 +7,16 @@ impl std::io::Read for Foo {
     }
 }
 
+impl std::io::Write for Foo {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        todo!()
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        todo!()
+    }
+}
+
 impl std::io::BufRead for Foo {
     fn fill_buf(&mut self) -> std::io::Result<&[u8]> {
         todo!()
@@ -17,6 +27,10 @@ impl std::io::BufRead for Foo {
     }
 }
 
+
+fn foo(n: &dyn BufRead) {
+    
+}
 
 fn main() {
     let mut file = std::fs::File::open("/home/zlef/dotfiles/init.el").unwrap();
