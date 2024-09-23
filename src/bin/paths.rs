@@ -6,6 +6,8 @@ fn foo(p: PathBuf) {
 
 
 fn main() {
+    let home = env::home_dir();
+
     let file = env::args().skip(1).next().unwrap_or("file10.rs".to_string());
     let path = Path::new(&file);
     match path.metadata() {
