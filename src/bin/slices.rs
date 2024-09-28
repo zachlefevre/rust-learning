@@ -22,13 +22,15 @@ fn main() {
     take_slice(&vector[1..]);
 
     let s = "hey there";
+    take_str(s);
+    take_str(&s);
+    take_str(&s[1..]);
 
     let text = String::from(s);
     take_str(&text);
 
     take_str(&text[..]);
 
-    take_str(s);
 
     dbg!(s.chars()
         .filter(|ch| ! ch.is_whitespace()).collect::<String>());
