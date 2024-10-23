@@ -1,16 +1,15 @@
-use std::error::Error;
+use std::{error::Error, io::{self}, net::TcpListener};
 
-use tokio::{net::TcpListener, io};
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    let listener = TcpListener::bind("127.0.0.1:8888").await?;
+fn main() -> Result<(), Box<dyn Error>> {
+    let listener = TcpListener::bind("127.0.0.1:8080")?;
 
     loop {
-        let (socket, _) = listener.accept().await?;
-        tokio::spawn(async {
-            let (mut reader, mut writer) = io::split(socket);
-            io::copy(&mut reader, &mut writer).await.unwrap();
-        });
+        println!("listening");
+        let (socket, addr) = listener.accept()?;
+        dbg!(addr);
+        let mut read = socket;
+        let mut write = read.try_clone()?;
+
+        io::copy(&mut read, &mut write)?;
     }
 }
