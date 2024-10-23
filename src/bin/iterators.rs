@@ -29,4 +29,9 @@ fn main() {
 
     dbg!(vec![1, 2, 3].into_iter().filter(|t| *t == 2).collect::<Vec<_>>());
     dbg!(vec![1, 2, 3].into_iter().map(|t| t == 2).collect::<Vec<_>>());
+
+    // We get traverse/sequence for free through the collect trait
+    let a: Result<Vec<i32>, i32> = vec![Ok::<i32, i32>(1), Err::<i32, i32>(2)].into_iter().collect();
+    dbg!(a);
+
 }
