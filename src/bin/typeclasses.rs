@@ -23,7 +23,6 @@ mod example {
             type AuthInfo;
             fn auth_info(&self) -> Self::AuthInfo;
 
-            fn transfer_parameters(&self) -> TransferParameters;
         }
 
         pub struct Nfs {
@@ -38,9 +37,6 @@ mod example {
                 self.auth.clone()
             }
 
-            fn transfer_parameters(&self) -> TransferParameters {
-                todo!()
-            }
         }
         pub struct Bootp;
 
@@ -51,9 +47,6 @@ mod example {
                 bootp::AuthInfo(18)
             }
 
-            fn transfer_parameters(&self) -> TransferParameters {
-                todo!()
-            }
         }
     }
 
