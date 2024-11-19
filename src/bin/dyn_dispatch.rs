@@ -17,6 +17,19 @@ impl Animal for Dog {
     }
 }
 
+
+trait NoDynamic {
+    fn no_dyn(self) where Self: Sized { }
+    fn yes_dyn(&self) { }
+
+}
+
+
+fn foo<T>(t: &dyn NoDynamic) {
+//    t.no_dyn()
+    t.yes_dyn()
+}
+
 fn dothing(t: &dyn Animal) {
     dbg!(t.speak());
 }
@@ -25,4 +38,7 @@ fn main() {
     let n = 23;
     let animal: &dyn Animal = if n == 22 {&Wombat} else {&Dog};
     dothing(animal);
+
+    
+
 }
