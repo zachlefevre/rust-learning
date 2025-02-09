@@ -1,120 +1,49 @@
-use std::{error::Error, future::Future, pin::Pin, time::Duration};
+use tokio::{net::{TcpListener, TcpSocket, TcpStream}, task};
+use std::future::Future;
 
-use tokio::{net::TcpListener, io::{self, AsyncRead, AsyncWrite}};
-
-struct HttpRequest {
-    path: String
-}
-struct HttpResponse;
 
 struct Server {
     addr: String
 }
 
-fn make_request(_read: impl AsyncRead) -> HttpRequest {
-    todo!()
-}
+struct Request;
+struct Response;
 
-fn write_response(_http_response: HttpResponse, _write: impl AsyncWrite) {
-    ()
-}
-
-fn write_error(_error: Box<dyn Error>, _write: impl AsyncWrite) {
-    ()
-}
-
-
-// Service is actually useful for the client too, and therefore Handler is not an appropriate name
-trait Service<Request> {
-    type Response;
-
-    // we let the user choose their output type, although it *must* be a Future of this particuar shape
-    type Future: Future<Output = Result<Self::Response, Box<dyn Error>>>;
-
-    fn call(&mut self, req: Request) -> Self::Future;
-}
 
 impl Server {
-    async fn run<F>(self, mut handler: F) -> Result<(), Box<dyn Error>> where
-        F: Service<HttpRequest, Response = HttpResponse>
+    async fn run<F, Fut>(self, handler: F) -> Result<(), std::io::Error>
+        where F: Fn(Request) -> Fut,
+              Fut: Future<Output = Result<Response, std::io::Error>>
     {
         let listener = TcpListener::bind(self.addr).await?;
-
         loop {
             let (socket, _) = listener.accept().await?;
-            let (read, write) = io::split(socket);
-            let request = make_request(read);
-            let response = handler.call(request).await;
+            let request = make_request(&socket);
+            let response = handler(request).await;
             match response {
-                Ok(http_response) => write_response(http_response, write), // the compiler is smart enough to see write is used exclusively in these two arms and therefore is not moved in the *other* arm.
-                Err(err) => write_error(err, write),
+                Ok(response) =>
+                    respond(response, &socket),
+                Err(e) => respond_error(e, &socket)
             }
+
         }
     }
 }
 
+fn respond_error(response: std::io::Error, socket: &TcpStream) {
 
-#[derive(Clone)]
-struct HttpHandler;
-impl Service<HttpRequest> for HttpHandler {
-    type Response = HttpResponse;
-
-    type Future = Pin<Box<dyn Future<Output = Result<HttpResponse, Box<dyn Error>>>>>;
-
-    fn call(&mut self, req: HttpRequest) -> Self::Future {
-        Box::pin(async move
-                 {
-                     if req.path == "/" {
-                         Ok(HttpResponse)
-                     } else {
-                         Ok(HttpResponse)
-                     }
-                 }
-        )
-    }
+}
+fn respond(response: Response, socket: &TcpStream) {
+    
 }
 
-#[derive(Clone)]
-struct Timeout<T> {
-    inner_handler: T,
-    timeout: Duration
+
+fn make_request(socket: &TcpStream) -> Request {
+    todo!()
 }
 
-impl<T> Timeout<T> {
-    fn new(inner_handler: T, timeout: Duration) -> Self { Self { inner_handler, timeout } }
-}
 
-impl<Request: 'static, T: Service<Request> + Clone + 'static> Service<Request> for Timeout<T> {
-    type Response = T::Response;
 
-    // references must be pinned to implement Future
-    // Must be boxed to have a particular size and allow `dyn ...`
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Box<dyn Error>>>>>;
-
-    fn call(&mut self, req: Request) -> Self::Future {
-
-        // we do not want to bind the lifetime of the handler with the lifetime of our &mut self, and so we need to clone (this lets us move this cloned handler around)
-        let mut this = self.clone();
-
-        Box::pin(async move {
-            let fut = this.inner_handler.call(req);
-
-            let result = tokio::time::timeout(this.timeout, fut).await;
-
-            match result {
-                Err(_elapsed_time) => todo!(),
-                Ok(Ok(response)) => Ok(response),
-                Ok(Err(err)) => Err(err)
-            }
-        })
-    }
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    let server = Server {
-        addr: "127.0.0.1:8888".into()
-    };
-
-    server.run(Timeout::new(HttpHandler, Duration::from_secs(18))).await
+fn main() {
+    
 }
