@@ -4,5 +4,5 @@ where T: std::ops::Mul<Output = O> + Copy {
 }
 
 fn main() {
-    
+    dbg!(square(14));
 }
